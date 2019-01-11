@@ -115,14 +115,19 @@ void update_process_stats(process * run,process * wait,size_t mode)
             if (wait->arrived_time != 0)
                 wait->start_time = wait->start_time?wait->start_time:mode;
             wait->pause_time = mode;
+            run->remain_time -= mode - run->pause_time;
+        }
+        else
+        {
+            run->remain_time = 0;
         }
 
-        run->remain_time -= mode - run->pause_time;
+
         run->pause_time = mode;
         if(run->remain_time == 0)
         {
             run->finished_time = mode;
-            run->turnaround_time = mode -  - run->arrived_time;
+            run->turnaround_time = run->finished_time - run->arrived_time;
         }
         
 

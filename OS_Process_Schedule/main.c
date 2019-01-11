@@ -186,7 +186,8 @@ void HPS(const phead s)
     pnode tsave = NULL;
     for_each_safe(running, tsave, wait_list)
     {
-        safe_time += running->psw->estimated_time;
+        safe_time += (running->psw->estimated_time == running->psw->remain_time) ?
+                    running->psw->estimated_time : running->psw->remain_time;
         pnode n = NULL;
         // TODO: 抢占式优先级算法
 
@@ -198,7 +199,7 @@ void HPS(const phead s)
             
             pnode a = NULL;
             pnode b = NULL;
-            if(safe_time > n->psw->arrived_time)
+            if(safe_time > n->psw->arrived_time && n->psw->level < running->psw->level)
                 safe_time = n->psw->arrived_time;
             for_each_safe(a, b, wait_list)
             {
@@ -213,7 +214,14 @@ void HPS(const phead s)
         
         tsave = queue_next(running);
         queue_remove(wait_list, running);
-        update_process_stats(running->psw, tsave?tsave->psw:(void*)n, safe_time);
+//        update_process_stats(running->psw,
+//                             tsave?tsave->psw:(void*)n,
+//                             queue_empty(arrived_list) ? safe_time : (safe_time+=running->psw->remain_time));
+        if(tsave && tsave->psw->level < running->psw->level)
+            update_process_stats(running->psw, tsave->psw, safe_time);
+        else
+            update_process_stats(running->psw, NULL, safe_time);
+            
         if (running->psw->remain_time == 0) {
             queue_insert_tail(finished_list, running);
         } else {
