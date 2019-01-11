@@ -119,7 +119,11 @@ void update_process_stats(process * run,process * wait,size_t mode)
         }
         else
         {
+            if (run->remain_time == run->estimated_time ) {
+                run->start_time = mode - run->remain_time;
+            }
             run->remain_time = 0;
+            
         }
 
 
